@@ -45,6 +45,7 @@ class BuildingEvacuationModel(ap.Model):
     environment_info = {
         'W': self.__get_positions_from_floorplan('W', floorplan),
         'E': self.__get_positions_from_floorplan('E', floorplan),
+        'S': self.__get_positions_from_floorplan('S', floorplan),
         'width': width,
         'height': height
     }
@@ -64,13 +65,12 @@ class BuildingEvacuationModel(ap.Model):
     # The building will be represented as a one floor thas specified width and height
     self.building = ap.Grid(self, [width, height], track_empty=True)
 
-    # Place the fire alarms
-    # TODO: Pegar o numero de placas de saida de emergencia da planta
-    # TODO: Pegar as posições das placas de saida da planta
-    n_emergency_exit_signs = self.p.n_emergency_exit_signs
+    # Place the emergency exit signs
+    n_emergency_exit_signs = len(environment_info['S'])
     self.emergency_exit_sign = ap.AgentList(self, n_emergency_exit_signs, agents.EmergencyExitSignAgent)
     self.emergency_exit_sign.setup_pos(self.building)
-    self.building.add_agents(self.emergency_exit_sign, positions=[(0, int(height/2)), (width - 1, int(height/2))])
+    self.building.add_agents(self.emergency_exit_sign, positions=environment_info['S'])
+    self.emergency_exit_sign.setup_nearests_exits(environment_info['E'])
 
     # Place the emergency exits
     # TODO: Pensar numa logica de posicionar os alarmes de incendio
@@ -78,6 +78,9 @@ class BuildingEvacuationModel(ap.Model):
     self.emergency_exit = ap.AgentList(self, n_of_emergency_exits, agents.EmergencyExitAgent)
     self.emergency_exit.setup_pos(self.building)
     self.building.add_agents(self.emergency_exit, positions=environment_info['E'])
+    # Solução possível:
+    # Posso passar a posição de todas as saídas de emergência para as placas
+    # Dentro das placas ele computa a distância e escolhe qual é a melhor
 
     # Place the obstacles
     number_of_obstacles = len(environment_info['W'])

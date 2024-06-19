@@ -2,6 +2,7 @@
 
 import itertools
 import random
+import utils
 
 import constants as consts
 import agentpy as ap
@@ -17,26 +18,34 @@ class ObstacleAgent(ap.Agent):
 
 class EmergencyExitSignAgent(ap.Agent):
   def setup(self):
-    # TODO: Ele vai buscar pelas saídas mais próximas e definir a saída mais próxima
-    # que será a saída que ele indicará para os agentes
-    self.nearest_emergency_exit = (10, 0) # Hardcoded por enquanto
-    # TODO: Calcular a informação da saída mais próxima para colocar na saída de emergencia
+    pass
 
   def setup_pos(self, grid):
     self.grid = grid
+
+  def setup_nearests_exits(self, emergency_exit_positions):
+    current_position = self.grid.positions[self]
+    best_distance = float('inf')
+
+    for emergency_exit_position in emergency_exit_positions:
+      current_distance = utils.manhattan_distance(emergency_exit_position, current_position)
+      if current_distance < best_distance:
+        self.nearest_emergency_exit = emergency_exit_position
+        best_distance = current_distance
+
 
   def inform_nearest_emergency_exit(self):
     # Olha os agentes próximos e envia uma mensagem contendo a informação da saída mais próxima
 
     # Utiliza o protocolo FIPA para indicar a saída
     # TODO: Modificar para utilizar o FIPA
-    neighbors = self.grid.neighbors(self, 2)
+    neighbors = self.grid.neighbors(self, consts.EMERGENCY_EXIT_SIGN_VISIBLITY_RADIUS)
     for agents in neighbors:
       # Nem todos os agentes possuem a classe
       # O ideal seria conseguir filtrar pelo tipo de agente
       try:
         if agents.agent_class == consts.ADULT_KEY:
-          agents.nearest_emergency_exit = self.nearest_emergency_exit
+          agents.known_exit_position = self.nearest_emergency_exit
       except:
         pass
 
@@ -57,30 +66,12 @@ class PersonAgent(ap.Agent):
     self.panic_level = 0
     self.environment_knowledge = 1
     self.agent_class = consts.ADULT_KEY
-    self.nearest_emergency_exit = None
+    self.known_exit_position = None
     self.is_safe = False
+    self.memory = utils.CircularBuffer(consts.PERSON_AGENT_MEMORY_SIZE)
 
   def setup_pos(self, grid):
     self.grid = grid
-
-  def _compute_better_path(self, destination_path):
-      if abs(destination_path[0]) >= self.physical_capacity:
-        if destination_path[0] > 0:
-          x_movement = self.physical_capacity
-        else:
-          x_movement = -self.physical_capacity
-      else:
-        x_movement = destination_path[0]
-
-      if abs(destination_path[1]) >= self.physical_capacity:
-        if destination_path[1] > 0:
-          y_movement = self.physical_capacity
-        else:
-          y_movement = -self.physical_capacity
-      else:
-        y_movement = destination_path[1]
-
-      return (x_movement, y_movement)
 
   def _get_absolute_possible_movements(self):
     # Pega posição atual
@@ -109,43 +100,29 @@ class PersonAgent(ap.Agent):
     empty_positions = self.grid.empty
 
     posible_next_positions_empty = self._get_empty_possible_positions(possible_next_positions, empty_positions)
+    not_previously_seen_empty_positions = utils.find_exclusive_tuples(posible_next_positions_empty, self.memory.get())
 
-    if self.nearest_emergency_exit == None:
-      best_absolute_destination = random.choice(posible_next_positions_empty)
-    else:
-      distances_list = []
-      # Computar a diferença entre o destino e as posições possíveis
-      for position in posible_next_positions_empty:
-        # Calculando a distancia de manhattan (x1 - x0) + (y1 - y0), podemos mudar para outra distância
-        current_distance = (self.nearest_emergency_exit[0] - position[0]) + (self.nearest_emergency_exit[1] - position[1])
-      # Escolher o que tem a menor distância
-      # Ordena a lista do menor pro maior e seleciona o primeiro item
-      sorted_distances = sorted(distances_list)
-      best_absolute_destination = sorted_distances[0]
-    # for item in empty_positions:
-      # print(f"item={item}")
-    # neighbors = self.building.neighbors(person, 1) # Isso aqui me devolve uma lista de agentes proximos no raio, essa lista pode ser vazia
-    # Isso vai ajudar pra ver se preciso me comunicar com algum agente proximo ou se existe algum obstaculo
-    # print(f"Agent: {person}, Agent neighbors = {neighbors}, Len = {len(neighbors)}")
-    # if self.nearest_emergency_exit == None:
-    #   random_x_movement = random.choice([-self.physical_capacity, self.physical_capacity])
-    #   random_y_movement = random.choice([-self.physical_capacity, self.physical_capacity])
-    #   current_relative_destination = (random_x_movement, random_y_movement)
-    # else:
-    #   current_agent_position = self.grid.positions[self]
-    #   delta_x = self.nearest_emergency_exit[0] - current_agent_position[0]
-    #   delta_y = self.nearest_emergency_exit[1] - current_agent_position[1]
-    #   destination_path = (delta_x, delta_y)
-    #   current_relative_destination = self._compute_better_path(destination_path)
+    best_absolute_destination = self.grid.positions[self]
+    if not_previously_seen_empty_positions is not None:
+      if self.known_exit_position == None:
+        best_absolute_destination = random.choice(not_previously_seen_empty_positions)
+      else:
+        shortest_distance = float('inf')
+        # Computar a diferença entre o destino e as posições possíveis
+        for position in not_previously_seen_empty_positions:
+          current_distance = utils.manhattan_distance(self.known_exit_position, position)
+          if current_distance < shortest_distance:
+            shortest_distance = current_distance
+            best_absolute_destination = position
 
     self.grid.move_to(self, best_absolute_destination)
+    self.memory.append(best_absolute_destination)
 
-    # TODO: Checar se está perto da saída de emergência
     neighbors = self.grid.neighbors(self, self.physical_capacity)
     for agent in neighbors:
       try:
         if agent.is_emergency_exit:
-          self.nearest_emergency_exit = self.grid.positions[agent]
+          self.known_exit_position = self.grid.positions[agent]
       except:
         pass
 
@@ -158,14 +135,17 @@ class EmergencyExitAgent(ap.Agent):
   def setup_pos(self, grid):
     self.grid = grid
 
+  # Isso aqui é apenas pra contabilizar os agentes que passaram
   def allow_people(self):
-    neighbors = self.grid.neighbors(self, 1)
+    neighbors = self.grid.neighbors(self, consts.EMERGENCY_EXIT_VISIBLITY_RADIUS)
+    safe_agents = []
     for agent in neighbors:
       # Apenas para agentes que sao pessoas
       # O ideal seria checar o tipo do agente
       try:
         if agent.is_safe == False:
           self.people_passed = self.people_passed + 1
-          agent.is_safe = True
+          safe_agents.append(agent)
       except:
         pass
+    #self.grid.remove_agents(safe_agents)
