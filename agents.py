@@ -20,11 +20,8 @@ class EmergencyExitSignAgent(ap.Agent):
   def setup(self):
     pass
 
-  def setup_pos(self, grid):
-    self.grid = grid
-
-  def setup_nearests_exits(self, emergency_exit_positions):
-    current_position = self.grid.positions[self]
+  def setup_nearests_exits(self, emergency_exit_positions, grid):
+    current_position = grid.positions[self]
     best_distance = float('inf')
 
     for emergency_exit_position in emergency_exit_positions:
@@ -34,12 +31,12 @@ class EmergencyExitSignAgent(ap.Agent):
         best_distance = current_distance
 
 
-  def inform_nearest_emergency_exit(self):
+  def inform_nearest_emergency_exit(self, grid):
     # Olha os agentes próximos e envia uma mensagem contendo a informação da saída mais próxima
 
     # Utiliza o protocolo FIPA para indicar a saída
     # TODO: Modificar para utilizar o FIPA
-    neighbors = self.grid.neighbors(self, consts.EMERGENCY_EXIT_SIGN_VISIBLITY_RADIUS)
+    neighbors = grid.neighbors(self, consts.EMERGENCY_EXIT_SIGN_VISIBLITY_RADIUS)
     for agents in neighbors:
       # Nem todos os agentes possuem a classe
       # O ideal seria conseguir filtrar pelo tipo de agente
@@ -70,12 +67,19 @@ class PersonAgent(ap.Agent):
     self.is_safe = False
     self.memory = utils.CircularBuffer(consts.PERSON_AGENT_MEMORY_SIZE)
 
-  def setup_pos(self, grid):
-    self.grid = grid
+  def _get_agent_current_position(self, grid):
+    current_position = None
+    try:
+      current_position = grid.positions[self]
+    except:
+      pass
+    return current_position
 
-  def _get_absolute_possible_movements(self):
+  def _get_absolute_possible_movements(self, grid):
     # Pega posição atual
-    current_position = self.grid.positions[self]
+    current_position = self._get_agent_current_position(grid)
+    if current_position is None:
+      return
     # Lista com possíveis movimentações relativas
     # Ex: se physical capacity = 1, pode se mover pra -1, 0, 1
     possible_movements = list(range(-self.physical_capacity, self.physical_capacity+1))
@@ -95,15 +99,20 @@ class PersonAgent(ap.Agent):
 
     return empty_possible_positions
 
-  def evacuate(self):
-    possible_next_positions = self._get_absolute_possible_movements()
-    empty_positions = self.grid.empty
+  def evacuate(self, grid):
+    # Pega posição atual
+    current_position = self._get_agent_current_position(grid)
+    if current_position is None:
+      return
+
+    possible_next_positions = self._get_absolute_possible_movements(grid)
+    empty_positions = grid.empty
 
     posible_next_positions_empty = self._get_empty_possible_positions(possible_next_positions, empty_positions)
     not_previously_seen_empty_positions = utils.find_exclusive_tuples(posible_next_positions_empty, self.memory.get())
 
-    best_absolute_destination = self.grid.positions[self]
-    if not_previously_seen_empty_positions is not None:
+    best_absolute_destination = current_position
+    if not_previously_seen_empty_positions:
       if self.known_exit_position == None:
         best_absolute_destination = random.choice(not_previously_seen_empty_positions)
       else:
@@ -115,14 +124,14 @@ class PersonAgent(ap.Agent):
             shortest_distance = current_distance
             best_absolute_destination = position
 
-    self.grid.move_to(self, best_absolute_destination)
+    grid.move_to(self, best_absolute_destination)
     self.memory.append(best_absolute_destination)
 
-    neighbors = self.grid.neighbors(self, self.physical_capacity)
+    neighbors = grid.neighbors(self, self.physical_capacity)
     for agent in neighbors:
       try:
         if agent.is_emergency_exit:
-          self.known_exit_position = self.grid.positions[agent]
+          self.known_exit_position = grid.positions[agent]
       except:
         pass
 
@@ -132,12 +141,9 @@ class EmergencyExitAgent(ap.Agent):
     self.people_passed = 0
     self.is_emergency_exit = True
 
-  def setup_pos(self, grid):
-    self.grid = grid
-
   # Isso aqui é apenas pra contabilizar os agentes que passaram
-  def allow_people(self):
-    neighbors = self.grid.neighbors(self, consts.EMERGENCY_EXIT_VISIBLITY_RADIUS)
+  def allow_people(self, grid):
+    neighbors = grid.neighbors(self, consts.EMERGENCY_EXIT_VISIBLITY_RADIUS)
     safe_agents = []
     for agent in neighbors:
       # Apenas para agentes que sao pessoas
@@ -148,4 +154,9 @@ class EmergencyExitAgent(ap.Agent):
           safe_agents.append(agent)
       except:
         pass
-    #self.grid.remove_agents(safe_agents)
+    # ELe sai do grid mas continua na lista
+    # Preciso encontrar um jeito de não deixar ele mais na lista
+    grid.remove_agents(safe_agents)
+    # A bronca é que ele vai passar novamente no for e não vai ter mais posição
+    # O que eu posso fazer para evitar isso de um jeito decente?
+    # Nao queria fazer com um try except...

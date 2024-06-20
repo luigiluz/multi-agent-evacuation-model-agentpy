@@ -68,15 +68,13 @@ class BuildingEvacuationModel(ap.Model):
     # Place the emergency exit signs
     n_emergency_exit_signs = len(environment_info['S'])
     self.emergency_exit_sign = ap.AgentList(self, n_emergency_exit_signs, agents.EmergencyExitSignAgent)
-    self.emergency_exit_sign.setup_pos(self.building)
     self.building.add_agents(self.emergency_exit_sign, positions=environment_info['S'])
-    self.emergency_exit_sign.setup_nearests_exits(environment_info['E'])
+    self.emergency_exit_sign.setup_nearests_exits(environment_info['E'], self.building)
 
     # Place the emergency exits
     # TODO: Pensar numa logica de posicionar os alarmes de incendio
     n_of_emergency_exits = len(environment_info['E'])
     self.emergency_exit = ap.AgentList(self, n_of_emergency_exits, agents.EmergencyExitAgent)
-    self.emergency_exit.setup_pos(self.building)
     self.building.add_agents(self.emergency_exit, positions=environment_info['E'])
     # Solução possível:
     # Posso passar a posição de todas as saídas de emergência para as placas
@@ -94,19 +92,17 @@ class BuildingEvacuationModel(ap.Model):
     number_of_person_agents = self.p.n_agents
     print(f"Number of agents = {number_of_person_agents}")
     self.person_agents = ap.AgentList(self, number_of_person_agents, agents.PersonAgent)
-    self.person_agents.setup_pos(self.building)
     self.building.add_agents(self.person_agents, random=True, empty=True)
 
 
   def step(self):
     # Called at every simulation step
-    self.emergency_exit_sign.inform_nearest_emergency_exit()
-    self.person_agents.evacuate()
-    self.emergency_exit.allow_people()
+    self.emergency_exit_sign.inform_nearest_emergency_exit(self.building)
+    self.person_agents.evacuate(self.building)
+    self.emergency_exit.allow_people(self.building)
 
     # Check if the stop criteria was met
     # The stop criteria would be all people saved
-
 
   def update(self):
     # Called after setup as well as after each step
