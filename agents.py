@@ -59,7 +59,7 @@ class PersonAgent(ap.Agent):
     # self.physical_capacity = characteristics[PHYS_CAP_KEY]
     # self.panic_level = 0
     # self.environment_knowledge = characteristics[ENV_KNOW_KEY]
-    self.physical_capacity = 1
+    self.physical_capacity = 0 if random.random() < 0.23 else 1
     self.panic_level = 0
     self.environment_knowledge = 1
     self.agent_class = consts.ADULT_KEY
