@@ -1,3 +1,4 @@
+import constants as consts
 import environment_model as env_model
 
 import agentpy as ap
@@ -19,11 +20,31 @@ def animation_plot(model, ax):
       "ObstacleAgent": "gray",
       "PersonAgent": "blue",
   }
+  CHARACTERISTICS_COLOR_MAPPING = {
+      "is_not_adult": "orange",
+      "limited_mobility": "purple",
+      "high_panic_level": "red",
+      "knows_exit_position": "lime",
+  }
 
   # Plot each agent
   for agent, (x, y) in agents_positions.items():
       agent_type = agent.split()[0]  # Get the type of agent
       color = AGENT_COLOR_MAPPING.get(agent_type, "grey")  # Get the color for this type of agent
+
+      # Replace the (person) agent's color based on its own attributes/characteristics
+      if agent_type == "PersonAgent":
+        agent_obj = next(person for person in model.person_agents if str(person) == str(agent))
+
+        if agent_obj.agent_class in [consts.CHILD_KEY, consts.ELDER_KEY]:
+            color = CHARACTERISTICS_COLOR_MAPPING["is_not_adult"]
+        if agent_obj.physical_capacity < 1:
+            color = CHARACTERISTICS_COLOR_MAPPING["limited_mobility"]
+        if agent_obj.panic_level > 0:
+            color = CHARACTERISTICS_COLOR_MAPPING["high_panic_level"]
+        if agent_obj.known_exit_position is not None:
+            color = CHARACTERISTICS_COLOR_MAPPING["knows_exit_position"]
+
       ax.add_patch(patches.Rectangle((x, y), 1, 1, edgecolor='black', facecolor=color))
 
   # Set the limits of the plot
