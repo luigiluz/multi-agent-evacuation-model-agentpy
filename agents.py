@@ -144,6 +144,16 @@ class EmergencyExitAgent(ap.Agent):
   # Isso aqui é apenas pra contabilizar os agentes que passaram
   def allow_people(self, grid):
     neighbors = grid.neighbors(self, consts.EMERGENCY_EXIT_VISIBLITY_RADIUS)
+
+    neighbors = [
+        agent
+        for agent in neighbors
+        if (isinstance(agent, PersonAgent))
+        and (hasattr(agent, "is_safe") and (not agent.is_safe))
+    ]
+    # print(f"neighbors: {len(neighbors)}")
+    # print(f"> safe (from this exit door): {self.people_passed}")
+
     safe_agents = []
     for agent in neighbors:
       # Apenas para agentes que sao pessoas
