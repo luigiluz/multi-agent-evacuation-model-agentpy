@@ -53,7 +53,7 @@ class HeuristicSearch:
     def __check_final_condition(self, current_state, final_state):
         ret = False
 
-        if utils.manhattan_distance(current_state, final_state) == 0:
+        if utils.euclidean_distance(final_state, current_state) <= 0.001:
             ret = True
         return ret
 
@@ -76,9 +76,9 @@ class HeuristicSearch:
 
             future_positions = get_absolute_possible_movements(position)
             empty_positions = [position for position in future_positions if position in grid.empty]
-            obstacle_term = 8 - len(empty_positions)
-            distance_term = utils.manhattan_distance(final_state, position)
-            heuristic_function = obstacle_term + distance_term
+            obstacle_term = 9 - len(empty_positions)
+            distance_term = utils.euclidean_distance(final_state, position)
+            heuristic_function = obstacle_term + distance_term**2
             cost_since_root_node = current_node.cost_since_root_node + 1
 
             child_node = SearchNode(position, current_node, cost_since_root_node, heuristic_function)
@@ -93,7 +93,7 @@ class HeuristicSearch:
         self.frontier = []
         self.n_iter = 1
 
-        initial_node = SearchNode(initial_state, None, 0, utils.manhattan_distance(final_state, initial_state))
+        initial_node = SearchNode(initial_state, None, 0, utils.euclidean_distance(final_state, initial_state))
         self.frontier.append(initial_node)
 
         while(True):

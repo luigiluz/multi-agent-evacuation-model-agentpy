@@ -1,5 +1,7 @@
 from collections import deque
 
+import math
+
 class CircularBuffer:
     def __init__(self, size):
         self.buffer = deque(maxlen=size)
@@ -21,6 +23,13 @@ def manhattan_distance(destination, origin):
     if len(destination) != len(origin):
         raise ValueError("Tuples must be of the same length")
     return sum(abs(a - b) for a, b in zip(destination, origin))
+
+
+def euclidean_distance(destination, origin):
+    x1, y1 = origin
+    x2, y2 = destination
+    distance = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+    return distance
 
 
 def find_exclusive_tuples(list_a, list_b):
