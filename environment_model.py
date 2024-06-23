@@ -94,7 +94,7 @@ class BuildingEvacuationModel(ap.Model):
 
     if number_of_person_agents == 1:
       # Used to debug
-      current_agents_class = ap.AgentList(self, 1, agents.PersonAgent)
+      current_agents_class = ap.AgentList(self, number_of_person_agents, agents.PersonAgent)
       self.building.add_agents(current_agents_class, positions=[(20, 12)], empty=True)
     else:
       for agent_class, n_of_agents in number_of_agents_per_class.items():
