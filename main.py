@@ -64,7 +64,7 @@ def animation_plot(model, ax):
         patch_hatch = None
         alpha = 1
 
-      ax.add_patch(patches.Rectangle((x, y), x_patch_pos, y_patch_pos, edgecolor='black', facecolor=color, hatch=patch_hatch))
+      ax.add_patch(patches.Rectangle((x, y), x_patch_pos, y_patch_pos, edgecolor='black', facecolor=color, hatch=patch_hatch, alpha=alpha))
 
   # Set the limits of the plot
   ax.set_xlim(0, 50)
