@@ -92,7 +92,12 @@ class BuildingEvacuationModel(ap.Model):
     number_of_person_agents = self.p.n_agents
     print(f"Number of agents = {number_of_person_agents}")
     self.person_agents = ap.AgentList(self, number_of_person_agents, agents.PersonAgent)
-    self.building.add_agents(self.person_agents, random=True, empty=True)
+    if number_of_person_agents == 1:
+      self.building.add_agents(self.person_agents, positions=[(20, 12)], empty=True)
+      #self.building.add_agents(self.person_agents, positions=[(25, 12)], empty=True)
+    else:
+      self.building.add_agents(self.person_agents, random=True, empty=True)
+    # self.building.add_agents(self.person_agents, random=True, empty=True)
 
 
   def step(self):

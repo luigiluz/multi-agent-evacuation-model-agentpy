@@ -3,6 +3,7 @@
 import itertools
 import random
 import utils
+import search
 
 import constants as consts
 import agentpy as ap
@@ -66,6 +67,7 @@ class PersonAgent(ap.Agent):
     self.known_exit_position = None
     self.is_safe = False
     self.memory = utils.CircularBuffer(consts.PERSON_AGENT_MEMORY_SIZE)
+    self.path_finding = search.HeuristicSearch()
 
   def _get_agent_current_position(self, grid):
     current_position = None
@@ -75,40 +77,17 @@ class PersonAgent(ap.Agent):
       pass
     return current_position
 
-  def _get_absolute_possible_movements(self, grid):
-    # Pega posição atual
-    current_position = self._get_agent_current_position(grid)
-    if current_position is None:
-      return
-    # Lista com possíveis movimentações relativas
-    # Ex: se physical capacity = 1, pode se mover pra -1, 0, 1
-    possible_movements = list(range(-self.physical_capacity, self.physical_capacity+1))
-    # Gera uma lista de tuplas com as movimentações relativas possíveis
-    possible_relative_movements = list(itertools.product(possible_movements, possible_movements))
-    # Muda de posições relativas para posições absolutas
-    possible_absolute_positions = [(current_position[0] + t[0], current_position[1] + t[1]) for t in possible_relative_movements]
-
-    return possible_absolute_positions
-
-  def _get_empty_possible_positions(self, positions_list, empty_positions_list):
-    empty_possible_positions = []
-
-    for evaluated_position in positions_list:
-      if evaluated_position in empty_positions_list:
-        empty_possible_positions.append(evaluated_position)
-
-    return empty_possible_positions
-
   def evacuate(self, grid):
     # Pega posição atual
     current_position = self._get_agent_current_position(grid)
     if current_position is None:
       return
 
-    possible_next_positions = self._get_absolute_possible_movements(grid)
+    # Eu vou precisar fazer isso no A*
+    possible_next_positions = search.get_absolute_possible_movements(current_position)
     empty_positions = grid.empty
 
-    posible_next_positions_empty = self._get_empty_possible_positions(possible_next_positions, empty_positions)
+    posible_next_positions_empty = search.get_empty_possible_positions(possible_next_positions, empty_positions)
     not_previously_seen_empty_positions = utils.find_exclusive_tuples(posible_next_positions_empty, self.memory.get())
 
     best_absolute_destination = current_position
@@ -116,13 +95,8 @@ class PersonAgent(ap.Agent):
       if self.known_exit_position == None:
         best_absolute_destination = random.choice(not_previously_seen_empty_positions)
       else:
-        shortest_distance = float('inf')
-        # Computar a diferença entre o destino e as posições possíveis
-        for position in not_previously_seen_empty_positions:
-          current_distance = utils.manhattan_distance(self.known_exit_position, position)
-          if current_distance < shortest_distance:
-            shortest_distance = current_distance
-            best_absolute_destination = position
+        best_node = self.path_finding.find_best_path(self.memory, current_position, self.known_exit_position, grid)
+        best_absolute_destination = best_node.previous_states[1]
 
     grid.move_to(self, best_absolute_destination)
     self.memory.append(best_absolute_destination)
