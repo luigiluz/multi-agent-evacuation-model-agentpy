@@ -3,7 +3,7 @@ import itertools
 
 def get_absolute_possible_movements(current_position):
   if current_position is None:
-    return
+    return None
 
   # Lista com possíveis movimentações relativas
   possible_movements = list(range(-1, 2))
@@ -64,16 +64,19 @@ class HeuristicSearch:
 
     def _get_next_nodes(self, memory, current_node, final_state, grid):
         next_nodes = []
+        current_position = current_node.state
 
-        possible_next_positions = get_absolute_possible_movements(current_node.state)
-        empty_positions = grid.empty
+        possible_next_positions = get_absolute_possible_movements(current_position)
 
-        possible_next_positions_empty = get_empty_possible_positions(possible_next_positions, empty_positions)
+        possible_next_empty_positions = [position for position in possible_next_positions if position in grid.empty]
 
-        for position in possible_next_positions_empty:
+        for position in possible_next_empty_positions:
             if position in memory:
                 continue
-            obstacle_term = len(grid.empty[(position[0]-1):(position[0]+2)][(position[1]-1):(position[1]+2)])
+
+            future_positions = get_absolute_possible_movements(position)
+            empty_positions = [position for position in future_positions if position in grid.empty]
+            obstacle_term = 8 - len(empty_positions)
             distance_term = utils.manhattan_distance(final_state, position)
             heuristic_function = obstacle_term + distance_term
             cost_since_root_node = current_node.cost_since_root_node + 1
