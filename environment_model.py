@@ -48,6 +48,9 @@ class BuildingEvacuationModel(ap.Model):
   def setup(self):
     # Called at the start of the simulation
 
+    # Used to record data
+    self._simulation_data = []
+
     environment_info = self.__get_environment_info_from_file(self.p.floorplan_filepath)
 
     # Global values
@@ -78,15 +81,30 @@ class BuildingEvacuationModel(ap.Model):
     # TODO: Validar se o numero de agentes é igual ao numero total
 
     # Place the agents
-    # TODO: Place the agents according to the percentage of class
     number_of_person_agents = self.p.n_agents
-    self.person_agents = ap.AgentList(self, number_of_person_agents, agents.PersonAgent)
-    if number_of_person_agents == 1:
-      self.building.add_agents(self.person_agents, positions=[(20, 12)], empty=True)
-    else:
-      self.building.add_agents(self.person_agents, random=True, empty=True)
+    number_of_agents_per_class = {
+      consts.ADULT_KEY: int(self.p.adults_percentage * number_of_person_agents),
+      consts.EMPLOYEE_KEY: int(self.p.employee_percentage * number_of_person_agents),
+      consts.CHILD_KEY: int(self.p.child_percentage * number_of_person_agents),
+      consts.ELDER_KEY: int(self.p.elder_percentage * number_of_person_agents),
+      consts.LIM_MOB_KEY: int(self.p.limited_mobility_percentage * number_of_person_agents)
+    }
 
-    self._simulation_data = []
+    self.person_agents = ap.AgentList(self)
+
+    if number_of_person_agents == 1:
+      # Used to debug
+      current_agents_class = ap.AgentList(self, 1, agents.PersonAgent)
+      self.building.add_agents(current_agents_class, positions=[(20, 12)], empty=True)
+    else:
+      for agent_class, n_of_agents in number_of_agents_per_class.items():
+        print(f"Setting up {n_of_agents} {agent_class} agents..")
+        current_agents_class = ap.AgentList(self, n_of_agents, agents.PersonAgent)
+        current_agents_class.setup_characteristics(agent_class)
+
+        self.person_agents = self.person_agents.__add__(current_agents_class)
+
+      self.building.add_agents(self.person_agents, random=True, empty=True)
 
 
   def __compute_safe_agents_class(self, agent_class):
@@ -95,7 +113,6 @@ class BuildingEvacuationModel(ap.Model):
 
   def step(self):
     # Called at every simulation step
-    self.emergency_exit_sign.inform_nearest_emergency_exit(self.building)
     self.person_agents.evacuate(self.building)
     self.emergency_exit.allow_people(self.building)
 

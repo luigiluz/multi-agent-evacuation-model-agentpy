@@ -5,6 +5,7 @@ ELDER_KEY = 'elder'
 LIM_MOB_KEY = 'limited_mobility'
 ENV_KNOW_KEY = 'environment_knowledge'
 PHYS_CAP_KEY = 'physical_capacity'
+MEMORY_KEY = 'memory'
 
 WALL_KEY = 'W'
 SIGN_KEY = 'S'
@@ -17,28 +18,31 @@ IS_SAFE_KEY = 'is_safe'
 
 AGENTS_CLASS_CHARACTERISTICS_MAPPING = {
     ADULT_KEY: {
-        PHYS_CAP_KEY: 3,
-        ENV_KNOW_KEY: 2
+        PHYS_CAP_KEY: 1,
+        ENV_KNOW_KEY: 5,
+        MEMORY_KEY: 10
     },
     EMPLOYEE_KEY: {
-        PHYS_CAP_KEY: 3,
-        ENV_KNOW_KEY: 3
+        PHYS_CAP_KEY: 1,
+        ENV_KNOW_KEY: 5,
+        MEMORY_KEY: 10
     },
     CHILD_KEY: {
-        PHYS_CAP_KEY: 2,
-        ENV_KNOW_KEY: 1
+        PHYS_CAP_KEY: 0.5,
+        ENV_KNOW_KEY: 3,
+        MEMORY_KEY: 10
     },
     ELDER_KEY: {
-        PHYS_CAP_KEY: 2,
-        ENV_KNOW_KEY: 1
+        PHYS_CAP_KEY: 0.5,
+        ENV_KNOW_KEY: 4,
+        MEMORY_KEY: 10
     },
     LIM_MOB_KEY: {
-        PHYS_CAP_KEY: 1,
-        ENV_KNOW_KEY: 1
+        PHYS_CAP_KEY: 0.35,
+        ENV_KNOW_KEY: 3,
+        MEMORY_KEY: 10
     }
 }
 
 EMERGENCY_EXIT_SIGN_VISIBLITY_RADIUS = 2
 EMERGENCY_EXIT_VISIBLITY_RADIUS = 1
-
-PERSON_AGENT_MEMORY_SIZE = 10
