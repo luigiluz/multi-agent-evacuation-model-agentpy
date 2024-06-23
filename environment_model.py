@@ -36,7 +36,7 @@ class BuildingEvacuationModel(ap.Model):
     floorplan = self.__load_floorplan_file(filepath)
     width, height = np.shape(floorplan)
     environment_info = {
-        consts.WIDTH_KEY: self.__get_positions_from_floorplan(consts.WIDTH_KEY, floorplan),
+        consts.WALL_KEY: self.__get_positions_from_floorplan(consts.WALL_KEY, floorplan),
         consts.EXIT_KEY: self.__get_positions_from_floorplan(consts.EXIT_KEY, floorplan),
         consts.SIGN_KEY: self.__get_positions_from_floorplan(consts.SIGN_KEY, floorplan),
         consts.WIDTH_KEY: width,
@@ -70,9 +70,12 @@ class BuildingEvacuationModel(ap.Model):
     self.building.add_agents(self.emergency_exit, positions=environment_info[consts.EXIT_KEY])
 
     # Place the obstacles
-    number_of_obstacles = len(environment_info[consts.WIDTH_KEY])
+    number_of_obstacles = len(environment_info[consts.WALL_KEY])
     self.objects = ap.AgentList(self, number_of_obstacles, agents.ObstacleAgent)
-    self.building.add_agents(self.objects, positions=environment_info[consts.WIDTH_KEY])
+    self.building.add_agents(self.objects, positions=environment_info[consts.WALL_KEY])
+
+    # TODO: Validar se a porcentagem de agentes é igual a 100%
+    # TODO: Validar se o numero de agentes é igual ao numero total
 
     # Place the agents
     # TODO: Place the agents according to the percentage of class
