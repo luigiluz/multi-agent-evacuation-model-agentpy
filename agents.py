@@ -107,11 +107,16 @@ class PersonAgent(ap.Agent):
       return
 
     # Percept the environment
-    neighbors = grid.neighbors(self, self.environment_knowledge)
+    closer_neighbors = grid.neighbors(self, 1)
 
-    for agent in neighbors:
+    # Only check nearby exits (to avoid seeing over obstacles)
+    for agent in closer_neighbors:
       if isinstance(agent, EmergencyExitAgent):
         self.known_exit_position = grid.positions[agent]
+
+    # Look for distant agents to warn them
+    distant_neighbors = grid.neighbors(self, 3)
+    for agent in distant_neighbors:
       if isinstance(agent, EmergencyExitSignAgent):
         self.known_exit_position = agent.nearest_emergency_exit
       elif isinstance(agent, PersonAgent):
