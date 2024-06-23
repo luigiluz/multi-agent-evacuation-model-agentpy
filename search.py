@@ -1,10 +1,6 @@
 import utils
 import itertools
 
-import agents
-
-from pprint import pprint
-
 def get_absolute_possible_movements(current_position):
   if current_position is None:
     return

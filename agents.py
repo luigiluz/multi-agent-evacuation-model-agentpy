@@ -1,6 +1,5 @@
 """ This file contains the agents for the building evacuation simulation"""
 
-import itertools
 import random
 import utils
 import search
@@ -49,17 +48,8 @@ class EmergencyExitSignAgent(ap.Agent):
 
 
 class PersonAgent(ap.Agent):
-  # def setup(self, characteristics):
   def setup(self):
-    # Preciso definir as características dos agentes de forma aleatoria
-    # ou com base em algum parametro
-    # self.physical_capacity = self.p.physical_capacity
-    # self.panic_level = self.p.panic_level
-    # self.environment_knowledge = self.p.environment_knowledge
-    # TODO: Esses argumentos serão recebidos como entrada
-    # self.physical_capacity = characteristics[PHYS_CAP_KEY]
-    # self.panic_level = 0
-    # self.environment_knowledge = characteristics[ENV_KNOW_KEY]
+    # TODO: Receber as informações de capacidade fisica com base na classe do agente
     self.physical_capacity = 0 if random.random() < 0.23 else 1
     self.panic_level = 0
     self.environment_knowledge = 1
@@ -128,7 +118,7 @@ class EmergencyExitAgent(ap.Agent):
         agent
         for agent in neighbors
         if (isinstance(agent, PersonAgent))
-        and (hasattr(agent, "is_safe") and (not agent.is_safe))
+        and (hasattr(agent, consts.IS_SAFE_KEY) and (not agent.is_safe))
     ]
 
     for safe_neighbor in neighbors_close_to_exit:

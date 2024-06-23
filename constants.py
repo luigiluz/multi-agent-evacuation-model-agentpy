@@ -6,6 +6,15 @@ LIM_MOB_KEY = 'limited_mobility'
 ENV_KNOW_KEY = 'environment_knowledge'
 PHYS_CAP_KEY = 'physical_capacity'
 
+WALL_KEY = 'W'
+SIGN_KEY = 'S'
+EXIT_KEY = 'E'
+WIDTH_KEY = 'width'
+HEIGHT_KEY = 'height'
+STEP_KEY = 'step'
+CUSTOM_RECORD_KEY = 'custom_record'
+IS_SAFE_KEY = 'is_safe'
+
 AGENTS_CLASS_CHARACTERISTICS_MAPPING = {
     ADULT_KEY: {
         PHYS_CAP_KEY: 3,
