@@ -6,6 +6,9 @@ import agents
 import agentpy as ap
 import numpy as np
 
+import utils
+import constants as consts
+
 # E.g,: The total number of points is equal to width * height
 ## Let's say width = 10 and height = 10, there will be 100 available points
 ## If ObjectDensity is equal to 0.1, there will be 10 points with objects
@@ -99,6 +102,11 @@ class BuildingEvacuationModel(ap.Model):
       self.building.add_agents(self.person_agents, random=True, empty=True)
     # self.building.add_agents(self.person_agents, random=True, empty=True)
 
+    self._simulation_data = []
+
+  def __compute_safe_agents_class(self, agent_class):
+    return sum(exit.safe_agents_dict.get(agent_class, 0) for exit in self.emergency_exit)
+
 
   def step(self):
     # Called at every simulation step
@@ -106,8 +114,16 @@ class BuildingEvacuationModel(ap.Model):
     self.person_agents.evacuate(self.building)
     self.emergency_exit.allow_people(self.building)
 
-    # Check if the stop criteria was met
-    # The stop criteria would be all people saved
+    step_record_dict = {
+      "step": self.t,
+      consts.ADULT_KEY: self.__compute_safe_agents_class(consts.ADULT_KEY),
+      consts.CHILD_KEY: self.__compute_safe_agents_class(consts.CHILD_KEY),
+      consts.LIM_MOB_KEY: self.__compute_safe_agents_class(consts.LIM_MOB_KEY),
+      consts.ELDER_KEY: self.__compute_safe_agents_class(consts.ELDER_KEY),
+      consts.EMPLOYEE_KEY: self.__compute_safe_agents_class(consts.EMPLOYEE_KEY)
+    }
+
+    self._simulation_data.append(step_record_dict)
 
   def update(self):
     # Called after setup as well as after each step
@@ -117,4 +133,4 @@ class BuildingEvacuationModel(ap.Model):
 
   def end(self):
     # Called at the end of the simulation
-    pass
+    self.output["custom_record"] = self._simulation_data

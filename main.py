@@ -8,6 +8,7 @@ import matplotlib.patches as patches
 import IPython
 import tempfile
 import webbrowser
+import argparse
 
 def animation_plot(model, ax):
   # The dictionary of agents
@@ -62,6 +63,12 @@ def animation_plot(model, ax):
   ax.set_aspect('equal', adjustable='box')
 
 def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--wo_animation', action='store_true', help='Enable animation', default=False)
+
+    args = parser.parse_args()
+
     print("Building evacuation simulation")
     parameters = {
     'n_agents': 20,
@@ -75,20 +82,23 @@ def main():
     }
 
     model = env_model.BuildingEvacuationModel(parameters)
-    fig, ax = plt.subplots(figsize=(10, 10))
-    animation = ap.animate(model, fig, ax, animation_plot)
 
-    # Assume `animation` is your animation object
-    html_content = IPython.display.HTML(animation.to_jshtml(fps=5)).data
+    if args.wo_animation:
+        results = model.run(seed=42, display=True)
+        print(f"Results = {results}")
+    else:
+        fig, ax = plt.subplots(figsize=(10, 10))
+        animation = ap.animate(model, fig, ax, animation_plot)
 
-    # Create a temporary HTML file
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.html') as temp_file:
-        temp_file.write(html_content.encode('utf-8'))
-        temp_file_path = temp_file.name
+        # Assume `animation` is your animation object
+        html_content = IPython.display.HTML(animation.to_jshtml(fps=5)).data
 
-    webbrowser.open(f'file://{temp_file_path}')
+        # Create a temporary HTML file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.html') as temp_file:
+            temp_file.write(html_content.encode('utf-8'))
+            temp_file_path = temp_file.name
 
-    #results = model.run(seed=42)
+        webbrowser.open(f'file://{temp_file_path}')
 
 if __name__ == "__main__":
     main()

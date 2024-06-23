@@ -112,35 +112,26 @@ class PersonAgent(ap.Agent):
 
 class EmergencyExitAgent(ap.Agent):
   def setup(self):
-    self.people_passed = 0
     self.is_emergency_exit = True
+    self.safe_agents_dict = {
+      consts.ADULT_KEY: 0,
+      consts.CHILD_KEY: 0,
+      consts.ELDER_KEY: 0,
+      consts.LIM_MOB_KEY: 0,
+      consts.EMPLOYEE_KEY: 0
+    }
 
-  # Isso aqui é apenas pra contabilizar os agentes que passaram
   def allow_people(self, grid):
     neighbors = grid.neighbors(self, consts.EMERGENCY_EXIT_VISIBLITY_RADIUS)
 
-    neighbors = [
+    neighbors_close_to_exit = [
         agent
         for agent in neighbors
         if (isinstance(agent, PersonAgent))
         and (hasattr(agent, "is_safe") and (not agent.is_safe))
     ]
-    # print(f"neighbors: {len(neighbors)}")
-    # print(f"> safe (from this exit door): {self.people_passed}")
 
-    safe_agents = []
-    for agent in neighbors:
-      # Apenas para agentes que sao pessoas
-      # O ideal seria checar o tipo do agente
-      try:
-        if agent.is_safe == False:
-          self.people_passed = self.people_passed + 1
-          safe_agents.append(agent)
-      except:
-        pass
-    # ELe sai do grid mas continua na lista
-    # Preciso encontrar um jeito de não deixar ele mais na lista
-    grid.remove_agents(safe_agents)
-    # A bronca é que ele vai passar novamente no for e não vai ter mais posição
-    # O que eu posso fazer para evitar isso de um jeito decente?
-    # Nao queria fazer com um try except...
+    for safe_neighbor in neighbors_close_to_exit:
+      self.safe_agents_dict[safe_neighbor.agent_class] += 1
+
+    grid.remove_agents(neighbors_close_to_exit)
