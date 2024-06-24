@@ -126,6 +126,7 @@ def main():
     'child_percentage': 0.2,
     'elder_percentage': 0.1,
     'limited_mobility_percentage': 0.1,
+    'random_obstacles_percentage': 0.05, # Based on the amount of free grids
     'steps': 100,
     'floorplan_filepath': 'floorplan_fixed_signs_rearranged.txt'
     }

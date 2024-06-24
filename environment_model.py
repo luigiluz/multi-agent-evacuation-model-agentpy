@@ -57,6 +57,8 @@ class BuildingEvacuationModel(ap.Model):
     width = environment_info[consts.WIDTH_KEY]
     height = environment_info[consts.HEIGHT_KEY]
 
+    number_of_grid_items = width * height
+
     # Create grid (building)
     # The building will be represented as a one floor thas specified width and height
     self.building = ap.Grid(self, [width, height], track_empty=True)
@@ -72,10 +74,17 @@ class BuildingEvacuationModel(ap.Model):
     self.emergency_exit = ap.AgentList(self, n_of_emergency_exits, agents.EmergencyExitAgent)
     self.building.add_agents(self.emergency_exit, positions=environment_info[consts.EXIT_KEY])
 
-    # Place the obstacles
-    number_of_obstacles = len(environment_info[consts.WALL_KEY])
-    self.objects = ap.AgentList(self, number_of_obstacles, agents.ObstacleAgent)
+    # Place the walls
+    number_of_walls = len(environment_info[consts.WALL_KEY])
+    self.objects = ap.AgentList(self, number_of_walls, agents.ObstacleAgent)
     self.building.add_agents(self.objects, positions=environment_info[consts.WALL_KEY])
+
+    # Place the random obstacles
+    proportion_of_random_obstacles = self.p.random_obstacles_percentage
+    not_empty_number_of_items = n_emergency_exit_signs + n_of_emergency_exits + number_of_walls + self.p.n_agents
+    number_of_random_obstacles = int(proportion_of_random_obstacles * (number_of_grid_items - not_empty_number_of_items))
+    self.random_obstacles = ap.AgentList(self, number_of_random_obstacles, agents.ObstacleAgent)
+    self.building.add_agents(self.random_obstacles, random=True, empty=True)
 
     # TODO: Validar se a porcentagem de agentes é igual a 100%
     # TODO: Validar se o numero de agentes é igual ao numero total
@@ -109,6 +118,8 @@ class BuildingEvacuationModel(ap.Model):
       self.building.add_agents(self.person_agents, random=True, empty=True)
     self.person_agents.setup_position(self.building)
 
+    self.agents_in_simulation = len(self.person_agents)
+
 
   def __compute_safe_agents_class(self, agent_class):
     return sum(exit.safe_agents_dict.get(agent_class, 0) for exit in self.emergency_exit)
@@ -130,8 +141,14 @@ class BuildingEvacuationModel(ap.Model):
 
     self._simulation_data.append(step_record_dict)
 
-    # TODO: Adicionar checagem de condição final
-    # Se a quantidade de pessoas salvas é igual ao total de agentes
+    number_of_safe_agents_in_step = 0
+    for agent_class in [consts.ADULT_KEY, consts.CHILD_KEY, consts.LIM_MOB_KEY, consts.ELDER_KEY, consts.EMPLOYEE_KEY]:
+      number_of_safe_agents_in_step = number_of_safe_agents_in_step + step_record_dict[agent_class]
+
+    if self.agents_in_simulation == number_of_safe_agents_in_step:
+      print(f"All {self.agents_in_simulation} were saved")
+      self.end()
+
 
   def update(self):
     # Called after setup as well as after each step
