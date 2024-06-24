@@ -62,6 +62,7 @@ class PersonAgent(ap.Agent):
   def setup(self):
     self.known_exit_position = None
     self.is_safe = False
+    self.leader_agent = None
 
   def setup_characteristics(self, agent_class, exit_information=None):
     self.agent_class = agent_class
@@ -97,6 +98,24 @@ class PersonAgent(ap.Agent):
       pass
     return current_position
 
+
+  def _inform_known_position(self, agent_to_inform):
+    if self.known_exit_position is not None:
+      agent_to_inform.known_exit_position = self.known_exit_position
+
+
+  def _inform_nearest_exit(self, agent_to_inform, grid):
+    best_distance = float('inf')
+    for emergency_exit in self.emergency_exit_locations:
+      distance = utils.euclidean_distance(emergency_exit, self._get_agent_current_position(grid))
+      if distance < best_distance:
+        best_distance = distance
+        nearest_exit = emergency_exit
+
+    self.known_exit_position = nearest_exit
+    agent_to_inform.known_exit_position = nearest_exit
+
+
   def evacuate(self, grid):
     current_position = self._get_agent_current_position(grid)
     if current_position is None:
@@ -117,20 +136,9 @@ class PersonAgent(ap.Agent):
         self.known_exit_position = agent.nearest_emergency_exit
       elif isinstance(agent, PersonAgent):
         if self.agent_class == consts.ADULT_KEY:
-          if self.known_exit_position is not None:
-            agent.known_exit_position = self.known_exit_position
+          self._inform_known_position(agent)
         elif self.agent_class == consts.EMPLOYEE_KEY:
-          # TODO: Adicionar opção de protocolo de segurança "Follow Me"
-          # O agente vai ter uma quantidade X de pessoas para buscar e
-          # essas pessoas deverão seguir o agente
-          best_distance = float('inf')
-          for emergency_exit in self.emergency_exit_locations:
-            distance = utils.euclidean_distance(emergency_exit, self._get_agent_current_position(grid))
-            if distance < best_distance:
-              best_distance = distance
-              nearest_exit = emergency_exit
-          agent.known_exit_position = nearest_exit
-          self.known_exit_position = nearest_exit
+          self._inform_nearest_exit(agent, grid)
 
     # Move based on its physical capacity
     self.accumulated_steps += self.physical_capacity
