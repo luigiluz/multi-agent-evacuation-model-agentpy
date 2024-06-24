@@ -78,6 +78,17 @@ class PersonAgent(ap.Agent):
     if self.agent_class == consts.EMPLOYEE_KEY:
       self.emergency_exit_locations = exit_information
 
+  def setup_position(self, grid):
+    if self.agent_class == consts.EMPLOYEE_KEY:
+      best_distance = float('inf')
+      for emergency_exit in self.emergency_exit_locations:
+        distance = utils.euclidean_distance(emergency_exit, self._get_agent_current_position(grid))
+        if distance < best_distance:
+          best_distance = distance
+          nearest_exit = emergency_exit
+      self.known_exit_position = nearest_exit
+
+
   def _get_agent_current_position(self, grid):
     current_position = None
     try:
@@ -109,6 +120,9 @@ class PersonAgent(ap.Agent):
           if self.known_exit_position is not None:
             agent.known_exit_position = self.known_exit_position
         elif self.agent_class == consts.EMPLOYEE_KEY:
+          # TODO: Adicionar opção de protocolo de segurança "Follow Me"
+          # O agente vai ter uma quantidade X de pessoas para buscar e
+          # essas pessoas deverão seguir o agente
           best_distance = float('inf')
           for emergency_exit in self.emergency_exit_locations:
             distance = utils.euclidean_distance(emergency_exit, self._get_agent_current_position(grid))
@@ -116,6 +130,7 @@ class PersonAgent(ap.Agent):
               best_distance = distance
               nearest_exit = emergency_exit
           agent.known_exit_position = nearest_exit
+          self.known_exit_position = nearest_exit
 
     # Move based on its physical capacity
     self.accumulated_steps += self.physical_capacity

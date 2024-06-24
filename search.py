@@ -9,6 +9,7 @@ def get_absolute_possible_movements(current_position):
   possible_movements = list(range(-1, 2))
   # Gera uma lista de tuplas com as movimentações relativas possíveis
   possible_relative_movements = list(itertools.product(possible_movements, possible_movements))
+  possible_relative_movements.remove((0, 0))
   # Muda de posições relativas para posições absolutas
   possible_absolute_positions = [(current_position[0] + t[0], current_position[1] + t[1]) for t in possible_relative_movements]
 
@@ -71,14 +72,20 @@ class HeuristicSearch:
         possible_next_empty_positions = [position for position in possible_next_positions if position in grid.empty]
 
         for position in possible_next_empty_positions:
+            # To avoid previously seen locations
             if position in memory:
+                continue
+
+            # To avoid loops
+            if position in current_node.previous_states:
                 continue
 
             future_positions = get_absolute_possible_movements(position)
             empty_positions = [position for position in future_positions if position in grid.empty]
             obstacle_term = 9 - len(empty_positions)
             distance_term = utils.euclidean_distance(final_state, position)
-            heuristic_function = obstacle_term + distance_term**2
+            # Relaxed version of the heuristic
+            heuristic_function = obstacle_term + distance_term*5
             cost_since_root_node = current_node.cost_since_root_node + 1
 
             child_node = SearchNode(position, current_node, cost_since_root_node, heuristic_function)
@@ -97,10 +104,10 @@ class HeuristicSearch:
         self.frontier.append(initial_node)
 
         while(True):
-            #pprint(self.frontier)
 
             if not self.frontier:
                 print(f"Frontier is empty. Finishing the algorithm")
+                return current_node
 
             current_node = self.frontier.pop(0)
 

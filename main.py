@@ -109,7 +109,7 @@ def main():
     'elder_percentage': 0.1,
     'limited_mobility_percentage': 0.1,
     'steps': 50,
-    'floorplan_filepath': 'floorplan_fixed_signs.txt'
+    'floorplan_filepath': 'floorplan_fixed_signs_rearranged.txt'
     }
 
     model = env_model.BuildingEvacuationModel(parameters)

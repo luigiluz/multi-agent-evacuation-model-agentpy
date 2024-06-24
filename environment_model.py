@@ -94,8 +94,10 @@ class BuildingEvacuationModel(ap.Model):
 
     if number_of_person_agents == 1:
       # Used to debug
-      current_agents_class = ap.AgentList(self, number_of_person_agents, agents.PersonAgent)
-      self.building.add_agents(current_agents_class, positions=[(20, 12)], empty=True)
+      person_agent = ap.AgentList(self, number_of_person_agents, agents.PersonAgent)
+      person_agent.setup_characteristics(consts.EMPLOYEE_KEY, environment_info[consts.EXIT_KEY])
+      self.person_agents = self.person_agents.__add__(person_agent)
+      self.building.add_agents(self.person_agents, positions=[(20, 3)], empty=True)
     else:
       for agent_class, n_of_agents in number_of_agents_per_class.items():
         print(f"Setting up {n_of_agents} {agent_class} agents..")
@@ -105,6 +107,7 @@ class BuildingEvacuationModel(ap.Model):
         self.person_agents = self.person_agents.__add__(current_agents_class)
 
       self.building.add_agents(self.person_agents, random=True, empty=True)
+    self.person_agents.setup_position(self.building)
 
 
   def __compute_safe_agents_class(self, agent_class):
@@ -126,6 +129,9 @@ class BuildingEvacuationModel(ap.Model):
     }
 
     self._simulation_data.append(step_record_dict)
+
+    # TODO: Adicionar checagem de condição final
+    # Se a quantidade de pessoas salvas é igual ao total de agentes
 
   def update(self):
     # Called after setup as well as after each step

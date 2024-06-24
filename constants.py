@@ -19,28 +19,28 @@ IS_SAFE_KEY = 'is_safe'
 AGENTS_CLASS_CHARACTERISTICS_MAPPING = {
     ADULT_KEY: {
         PHYS_CAP_KEY: 1,
-        ENV_KNOW_KEY: 5,
-        MEMORY_KEY: 10
+        ENV_KNOW_KEY: 10,
+        MEMORY_KEY: 20
     },
     EMPLOYEE_KEY: {
         PHYS_CAP_KEY: 1,
-        ENV_KNOW_KEY: 5,
-        MEMORY_KEY: 10
+        ENV_KNOW_KEY: 10,
+        MEMORY_KEY: 20
     },
     CHILD_KEY: {
         PHYS_CAP_KEY: 0.5,
-        ENV_KNOW_KEY: 3,
-        MEMORY_KEY: 10
+        ENV_KNOW_KEY: 6,
+        MEMORY_KEY: 15
     },
     ELDER_KEY: {
         PHYS_CAP_KEY: 0.5,
-        ENV_KNOW_KEY: 4,
+        ENV_KNOW_KEY: 8,
         MEMORY_KEY: 10
     },
     LIM_MOB_KEY: {
         PHYS_CAP_KEY: 0.35,
-        ENV_KNOW_KEY: 3,
-        MEMORY_KEY: 10
+        ENV_KNOW_KEY: 6,
+        MEMORY_KEY: 15
     }
 }
 
