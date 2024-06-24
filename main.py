@@ -133,7 +133,7 @@ def main():
     'limited_mobility_percentage': 0.1,
     'random_obstacles_percentage': 0.05, # Based on the amount of free grids
     'steps': 50,
-    'floorplan_filepath': 'floorplan_fixed_signs_rearranged.txt'
+    'floorplan_filepath': 'environments/floorplan_fixed_signs_rearranged.txt'
     }
 
     timestamp_string = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
