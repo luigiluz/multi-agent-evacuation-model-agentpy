@@ -1,15 +1,20 @@
 import constants as consts
 import environment_model as env_model
+import images
 
 import agentpy as ap
 import matplotlib.pyplot as plt
 # Reference: https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Rectangle.html
 import matplotlib.patches as patches
+import pandas as pd
 
 import IPython
 import tempfile
 import webbrowser
 import argparse
+import datetime
+import os
+import json
 
 AGENTS_CLASSES_PATCHES_MAPPING = {
     consts.ADULT_KEY: {"x": 1, "y": 1, "hatch": "///"},
@@ -127,14 +132,32 @@ def main():
     'elder_percentage': 0.1,
     'limited_mobility_percentage': 0.1,
     'random_obstacles_percentage': 0.05, # Based on the amount of free grids
-    'steps': 100,
+    'steps': 50,
     'floorplan_filepath': 'floorplan_fixed_signs_rearranged.txt'
     }
+
+    timestamp_string = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    folder_name = f"{consts.ARTIFACTS_FOLDER}/{timestamp_string}_run"
+    parameter_json_filename = f"{folder_name}/parameters.json"
+    html_filename = f"{folder_name}/simulation_animation.html"
+    csv_filename = f"{folder_name}/simulation_data.csv"
+
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+    with open(parameter_json_filename, 'w') as json_file:
+        json.dump(parameters, json_file, indent=4)
 
     model = env_model.BuildingEvacuationModel(parameters)
 
     if args.wo_animation:
         results = model.run(seed=42, display=True)
+        json_data = results[consts.CUSTOM_RECORD_KEY]
+        df = pd.DataFrame(json_data)
+        df.to_csv(csv_filename)
+
+        images.generate_saved_agents_plot(df, folder_name, {"lala": "lele"})
+
         print(f"Results = {results}")
     else:
         fig, ax = plt.subplots(figsize=(15, 10))
@@ -143,12 +166,16 @@ def main():
         # Assume `animation` is your animation object
         html_content = IPython.display.HTML(animation.to_jshtml(fps=5)).data
 
-        # Create a temporary HTML file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.html') as temp_file:
-            temp_file.write(html_content.encode('utf-8'))
-            temp_file_path = temp_file.name
+        with open(html_filename, 'w') as html_file:
+            html_file.write(html_content)
 
-        webbrowser.open(f'file://{temp_file_path}')
+        json_data = model._simulation_data
+        df = pd.DataFrame(json_data)
+        df.to_csv(csv_filename)
+
+        images.generate_saved_agents_plot(df, folder_name, {"lala": "lele"})
+
+    print(f"The simulation artifacts are saved in {folder_name} folder")
 
 if __name__ == "__main__":
     main()

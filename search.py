@@ -108,7 +108,7 @@ class HeuristicSearch:
             if not self.frontier:
                 current_node.previous_states = [*current_node.previous_states[::-1], current_node.state]
                 current_node.previous_nodes = [*current_node.previous_nodes[::-1], current_node]
-                print(f"Frontier is empty. Finishing the algorithm")
+                # print(f"Frontier is empty. Finishing the algorithm")
                 return current_node
 
             current_node = self.frontier.pop(0)
@@ -116,7 +116,7 @@ class HeuristicSearch:
             if self.__check_final_condition(current_node.state, final_state) or (self.n_iter > self.max_iter):
                 current_node.previous_states = [*current_node.previous_states[::-1], current_node.state]
                 current_node.previous_nodes = [*current_node.previous_nodes[::-1], current_node]
-                print("Final state or max iter was reached!")
+                # print("Final state or max iter was reached!")
                 return current_node
 
             child_nodes = self._get_next_nodes(memory, current_node, final_state, grid)
