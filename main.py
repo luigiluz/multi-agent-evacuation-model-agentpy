@@ -12,11 +12,11 @@ import webbrowser
 import argparse
 
 AGENTS_CLASSES_PATCHES_MAPPING = {
-    "adult": {"x": 1, "y": 1, "hatch": "///"},
-    "employee": {"x": 1, "y": 1, "hatch": "ooo"},
-    "elder": {"x": 0.9, "y": 0.9, "hatch": "***"},
-    "child": {"x": 0.7, "y": 0.7, "hatch": "..."},
-    "limited_mobility": {"x": 1, "y": 1, "hatch": "---"}
+    consts.ADULT_KEY: {"x": 1, "y": 1, "hatch": "///"},
+    consts.EMPLOYEE_KEY: {"x": 1, "y": 1, "hatch": "ooo"},
+    consts.ELDER_KEY: {"x": 0.9, "y": 0.9, "hatch": "***"},
+    consts.CHILD_KEY: {"x": 0.7, "y": 0.7, "hatch": "..."},
+    consts.LIM_MOB_KEY: {"x": 1, "y": 1, "hatch": "---"}
 }
 
 CHARACTERISTICS_COLOR_MAPPING = {
@@ -89,9 +89,26 @@ def animation_plot(model, ax):
   # Add legend
   handles = [patches.Patch(color=color, label=agent_type) for agent_type, color in AGENT_COLOR_MAPPING.items()]
   ax.legend(handles=handles, bbox_to_anchor=(0.5, -0.25), loc='upper center')
-  ax.set_title(f"Simulation of Evacuation | Time-step: {model.t} \n"
-               f"Number of safe people Adults: {safe_adults}, Employees: {safe_employees}, Children: {safe_children}, Elders: {safe_elder}, Lim mobility: {safe_lim_mob}")
+  ax.set_title(f"Simulation of Evacuation | Time-step: {model.t}")
+
+  color_code_string = f"Characteristics color code \n knows_exit_position : {CHARACTERISTICS_COLOR_MAPPING['knows_exit_position']}\n medium_panic_level: {CHARACTERISTICS_COLOR_MAPPING['medium_panic_level']}\n high_panic_level: {CHARACTERISTICS_COLOR_MAPPING['high_panic_level']}"
+
+  # Add a textbox to the right of the plot
+  characteristics_props = dict(boxstyle='round', facecolor='white', alpha=0.5)
+  ax.text(1.02, 0.75, color_code_string, transform=ax.transAxes, fontsize=12, va='center', ha='left', bbox=characteristics_props)
+
+  safe_people_props = dict(boxstyle='round', facecolor='white', alpha=0.5)
+  safe_people_string = f"Number of safe people\n" + \
+  f"Adults ({AGENTS_CLASSES_PATCHES_MAPPING[consts.ADULT_KEY]['hatch'][0]}): {safe_adults}\n" + \
+  f"Employees({AGENTS_CLASSES_PATCHES_MAPPING[consts.EMPLOYEE_KEY]['hatch'][0]}): {safe_employees}\n" + \
+  f"Children({AGENTS_CLASSES_PATCHES_MAPPING[consts.CHILD_KEY]['hatch'][0]}): {safe_children}\n" + \
+  f"Elders({AGENTS_CLASSES_PATCHES_MAPPING[consts.ELDER_KEY]['hatch'][0]}): {safe_elder}\n" + \
+  f"Lim mobility({AGENTS_CLASSES_PATCHES_MAPPING[consts.LIM_MOB_KEY]['hatch'][0]}): {safe_lim_mob}"
+
+  ax.text(1.02, 0.5, safe_people_string, transform=ax.transAxes, fontsize=12, va='center', ha='left', bbox=safe_people_props)
+
   ax.set_aspect('equal', adjustable='box')
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -101,6 +118,7 @@ def main():
     args = parser.parse_args()
 
     print("Building evacuation simulation")
+    # TODO: Adicionar estratégia como parâmetro de entrada
     parameters = {
     'n_agents': 20,
     'adults_percentage': 0.5,
@@ -108,7 +126,7 @@ def main():
     'child_percentage': 0.2,
     'elder_percentage': 0.1,
     'limited_mobility_percentage': 0.1,
-    'steps': 50,
+    'steps': 100,
     'floorplan_filepath': 'floorplan_fixed_signs_rearranged.txt'
     }
 
@@ -118,7 +136,7 @@ def main():
         results = model.run(seed=42, display=True)
         print(f"Results = {results}")
     else:
-        fig, ax = plt.subplots(figsize=(10, 10))
+        fig, ax = plt.subplots(figsize=(15, 10))
         animation = ap.animate(model, fig, ax, animation_plot)
 
         # Assume `animation` is your animation object
