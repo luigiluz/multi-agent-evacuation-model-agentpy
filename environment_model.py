@@ -100,7 +100,7 @@ class BuildingEvacuationModel(ap.Model):
       for agent_class, n_of_agents in number_of_agents_per_class.items():
         print(f"Setting up {n_of_agents} {agent_class} agents..")
         current_agents_class = ap.AgentList(self, n_of_agents, agents.PersonAgent)
-        current_agents_class.setup_characteristics(agent_class)
+        current_agents_class.setup_characteristics(agent_class, environment_info[consts.EXIT_KEY])
 
         self.person_agents = self.person_agents.__add__(current_agents_class)
 

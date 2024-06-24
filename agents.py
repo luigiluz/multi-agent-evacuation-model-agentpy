@@ -63,7 +63,7 @@ class PersonAgent(ap.Agent):
     self.known_exit_position = None
     self.is_safe = False
 
-  def setup_characteristics(self, agent_class):
+  def setup_characteristics(self, agent_class, exit_information=None):
     self.agent_class = agent_class
     self.memory = utils.CircularBuffer(consts.AGENTS_CLASS_CHARACTERISTICS_MAPPING[self.agent_class][consts.MEMORY_KEY])
 
@@ -75,7 +75,8 @@ class PersonAgent(ap.Agent):
     self.physical_capacity = consts.AGENTS_CLASS_CHARACTERISTICS_MAPPING[self.agent_class][consts.PHYS_CAP_KEY]
     self.accumulated_steps = 0
 
-    # TODO: Adicionar informações das saídas de emergência se for da classe EMPLOYEE
+    if self.agent_class == consts.EMPLOYEE_KEY:
+      self.emergency_exit_locations = exit_information
 
   def _get_agent_current_position(self, grid):
     current_position = None
@@ -104,9 +105,17 @@ class PersonAgent(ap.Agent):
       if isinstance(agent, EmergencyExitSignAgent):
         self.known_exit_position = agent.nearest_emergency_exit
       elif isinstance(agent, PersonAgent):
-        if self.agent_class == consts.ADULT_KEY or self.agent_class == consts.EMPLOYEE_KEY:
+        if self.agent_class == consts.ADULT_KEY:
           if self.known_exit_position is not None:
             agent.known_exit_position = self.known_exit_position
+        elif self.agent_class == consts.EMPLOYEE_KEY:
+          best_distance = float('inf')
+          for emergency_exit in self.emergency_exit_locations:
+            distance = utils.euclidean_distance(emergency_exit, self._get_agent_current_position(grid))
+            if distance < best_distance:
+              best_distance = distance
+              nearest_exit = emergency_exit
+          agent.known_exit_position = nearest_exit
 
     # Move based on its physical capacity
     self.accumulated_steps += self.physical_capacity
