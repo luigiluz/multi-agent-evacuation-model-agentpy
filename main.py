@@ -66,6 +66,19 @@ def animation_plot(model, ax):
 
       ax.add_patch(patches.Rectangle((x, y), x_patch_pos, y_patch_pos, edgecolor='black', facecolor=color, hatch=patch_hatch, alpha=alpha))
 
+  safe_adults = 0
+  safe_employees = 0
+  safe_children = 0
+  safe_elder = 0
+  safe_lim_mob = 0
+  if model.t > 0:
+    custom_data = model._simulation_data[model.t - 1]
+    safe_adults = custom_data[consts.ADULT_KEY]
+    safe_employees = custom_data[consts.EMPLOYEE_KEY]
+    safe_children = custom_data[consts.CHILD_KEY]
+    safe_elder = custom_data[consts.ELDER_KEY]
+    safe_lim_mob = custom_data[consts.LIM_MOB_KEY]
+
   # Set the limits of the plot
   ax.set_xlim(0, 50)
   ax.set_ylim(0, 50)
@@ -76,8 +89,8 @@ def animation_plot(model, ax):
   # Add legend
   handles = [patches.Patch(color=color, label=agent_type) for agent_type, color in AGENT_COLOR_MAPPING.items()]
   ax.legend(handles=handles, bbox_to_anchor=(0.5, -0.25), loc='upper center')
-  ax.set_title(f"Simulation of Evacuation \n"
-               f"Time-step: {model.t}")
+  ax.set_title(f"Simulation of Evacuation | Time-step: {model.t} \n"
+               f"Number of safe people Adults: {safe_adults}, Employees: {safe_employees}, Children: {safe_children}, Elders: {safe_elder}, Lim mobility: {safe_lim_mob}")
   ax.set_aspect('equal', adjustable='box')
 
 def main():
