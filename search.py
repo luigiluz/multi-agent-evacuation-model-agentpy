@@ -106,6 +106,8 @@ class HeuristicSearch:
         while(True):
 
             if not self.frontier:
+                current_node.previous_states = [*current_node.previous_states[::-1], current_node.state]
+                current_node.previous_nodes = [*current_node.previous_nodes[::-1], current_node]
                 print(f"Frontier is empty. Finishing the algorithm")
                 return current_node
 
