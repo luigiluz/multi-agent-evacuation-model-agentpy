@@ -160,7 +160,10 @@ class PersonAgent(ap.Agent):
 
   def _find_optimal_path(self, current_position, grid):
     best_node = self.path_finding.find_best_path(self.memory, current_position, self.known_exit_position, grid)
-    destination = best_node.previous_states[1]
+    if len(best_node.previous_states) > 1:
+      destination = best_node.previous_states[1]
+    else:
+      destination = best_node.previous_states[0]
 
     return destination
 
