@@ -63,6 +63,8 @@ class PersonAgent(ap.Agent):
     self.known_exit_position = None
     self.is_safe = False
     self.leader_agent = None
+    self.number_of_followers = 0
+    self.elapsed_time = 0
 
   def setup_characteristics(self, agent_class, exit_information=None):
     self.agent_class = agent_class
@@ -116,7 +118,52 @@ class PersonAgent(ap.Agent):
     agent_to_inform.known_exit_position = nearest_exit
 
 
+  def _inform_follow_me(self, agent_to_inform):
+    agent_to_inform.leader = self
+    self.number_of_followers = self.number_of_followers + 1
+
+
+  def _increment_accumulated_steps(self):
+    self.accumulated_steps += self.physical_capacity
+
+
+  def _increment_elapsed_time(self):
+    self.elapsed_time = self.elapsed_time + 1
+
+
+  def _agent_ready_to_move(self):
+    ready_to_move = False
+    if self.accumulated_steps >= 1:
+      self.accumulated_steps = 0
+      ready_to_move = True
+
+    return ready_to_move
+
+  def _get_not_previously_seen_positions(self, current_position, grid):
+    possible_next_positions = search.get_absolute_possible_movements(current_position)
+    empty_positions = grid.empty
+
+    posible_next_positions_empty = search.get_empty_possible_positions(possible_next_positions, empty_positions)
+    not_previously_seen_empty_positions = utils.find_exclusive_tuples(posible_next_positions_empty, self.memory.get())
+
+    return not_previously_seen_empty_positions
+
+
+  def _random_movement(self, not_previously_seen_empty_positions):
+    destination = random.choice(not_previously_seen_empty_positions)
+
+    return destination
+
+
+  def _find_optimal_path(self, current_position, grid):
+    best_node = self.path_finding.find_best_path(self.memory, current_position, self.known_exit_position, grid)
+    destination = best_node.previous_states[1]
+
+    return destination
+
+
   def evacuate(self, grid):
+    # Check if the agent is still in the environment
     current_position = self._get_agent_current_position(grid)
     if current_position is None:
       return
@@ -124,44 +171,58 @@ class PersonAgent(ap.Agent):
     # Percept the environment
     closer_neighbors = grid.neighbors(self, 1)
 
-    # Only check nearby exits (to avoid seeing over obstacles)
+    ## Only check nearby exits (to avoid seeing over obstacles)
     for agent in closer_neighbors:
       if isinstance(agent, EmergencyExitAgent):
         self.known_exit_position = grid.positions[agent]
 
-    # Look for distant agents to warn them
+    ## Look for distant agents to warn them
     distant_neighbors = grid.neighbors(self, 3)
     for agent in distant_neighbors:
       if isinstance(agent, EmergencyExitSignAgent):
         self.known_exit_position = agent.nearest_emergency_exit
       elif isinstance(agent, PersonAgent):
+        ### Responsabilidades da classe ADULT
         if self.agent_class == consts.ADULT_KEY:
           self._inform_known_position(agent)
+        ### Responsabilidades da classe EMPLOYEE
         elif self.agent_class == consts.EMPLOYEE_KEY:
-          self._inform_nearest_exit(agent, grid)
+          ### Informa pro adulto a saída mais próxima
+          if agent.agent_class == consts.ADULT_KEY:
+            self._inform_nearest_exit(agent, grid)
+          ### Se for criança, idoso, ou pessoa com mobilidade limitada, informa o follow me
+          elif agent.agent_class in [consts.CHILD_KEY, consts.ELDER_KEY, consts.LIM_MOB_KEY]:
+            self._inform_follow_me(agent)
 
-    # Move based on its physical capacity
-    self.accumulated_steps += self.physical_capacity
+    # Move based on agent's physical capacity
+    self._increment_accumulated_steps()
+    self._increment_elapsed_time()
 
-    if self.accumulated_steps >= 1:
-      self.accumulated_steps = 0
+    if self._agent_ready_to_move():
 
-      possible_next_positions = search.get_absolute_possible_movements(current_position)
-      empty_positions = grid.empty
+      not_previously_seen_empty_positions = self._get_not_previously_seen_positions(current_position, grid)
+      if not not_previously_seen_empty_positions:
+        return
 
-      posible_next_positions_empty = search.get_empty_possible_positions(possible_next_positions, empty_positions)
-      not_previously_seen_empty_positions = utils.find_exclusive_tuples(posible_next_positions_empty, self.memory.get())
-
-      best_absolute_destination = current_position
-      if not_previously_seen_empty_positions:
-        if self.known_exit_position == None:
-          best_absolute_destination = random.choice(not_previously_seen_empty_positions)
+      if self.agent_class == consts.EMPLOYEE_KEY:
+        if (self.number_of_followers >= 5 or self.elapsed_time >= 15):
+          current_destination = self._find_optimal_path(current_position, grid)
         else:
-          best_node = self.path_finding.find_best_path(self.memory, current_position, self.known_exit_position, grid)
-          # TODO: Adicionar influência do nível de pânico
-          # Dependendo do nível de pânico, a pessoa pode escolher o caminho não ótimo
-          best_absolute_destination = best_node.previous_states[1]
+          current_destination = self._random_movement(not_previously_seen_empty_positions)
 
-      # Action
-      grid.move_to(self, best_absolute_destination)
-      self.memory.append(best_absolute_destination)
+      elif self.agent_class == consts.ADULT_KEY:
+        if self.known_exit_position:
+          current_destination = self._find_optimal_path(current_position, grid)
+        else:
+          current_destination = self._random_movement(not_previously_seen_empty_positions)
+
+      elif self.agent_class in [consts.CHILD_KEY, consts.ELDER_KEY, consts.LIM_MOB_KEY]:
+        if self.leader_agent:
+          current_destination = grid.positions[self.leader_agent]
+        elif self.known_exit_position:
+          current_destination = self._find_optimal_path(current_position, grid)
+        else:
+          current_destination = self._random_movement(not_previously_seen_empty_positions)
+
+      grid.move_to(self, current_destination)
+      self.memory.append(current_destination)
