@@ -120,11 +120,9 @@ class PersonAgent(ap.Agent):
       if isinstance(agent, EmergencyExitSignAgent):
         self.known_exit_position = agent.nearest_emergency_exit
       elif isinstance(agent, PersonAgent):
-        # TODO: Adicionar capacidade de informar a saída mais próxima
-        # Os agentes que terão essa capacidade, serão:
-        # EMPLOYEE
-        # ADUTS se conhecerem a saída
-        pass
+        if self.agent_class == consts.ADULT_KEY or self.agent_class == consts.EMPLOYEE_KEY:
+          if self.known_exit_position is not None:
+            agent.known_exit_position = self.known_exit_position
 
     # Move based on its physical capacity
     self.accumulated_steps += self.physical_capacity
