@@ -31,22 +31,6 @@ class EmergencyExitSignAgent(ap.Agent):
         best_distance = current_distance
 
 
-  # def inform_nearest_emergency_exit(self, grid):
-  #   # Olha os agentes próximos e envia uma mensagem contendo a informação da saída mais próxima
-
-  #   # Utiliza o protocolo FIPA para indicar a saída
-  #   # TODO: Modificar para utilizar o FIPA
-  #   neighbors = grid.neighbors(self, consts.EMERGENCY_EXIT_SIGN_VISIBLITY_RADIUS)
-  #   for agents in neighbors:
-  #     # Nem todos os agentes possuem a classe
-  #     # O ideal seria conseguir filtrar pelo tipo de agente
-  #     try:
-  #       if agents.agent_class == consts.ADULT_KEY:
-  #         agents.known_exit_position = self.nearest_emergency_exit
-  #     except:
-  #       pass
-
-
 class EmergencyExitAgent(ap.Agent):
   def setup(self):
     self.is_emergency_exit = True
