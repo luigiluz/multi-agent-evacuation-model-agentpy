@@ -119,8 +119,9 @@ class PersonAgent(ap.Agent):
 
 
   def _inform_follow_me(self, agent_to_inform):
-    agent_to_inform.leader = self
-    self.number_of_followers = self.number_of_followers + 1
+    if agent_to_inform.leader_agent is None:
+      agent_to_inform.leader_agent = self
+      self.number_of_followers = self.number_of_followers + 1
 
 
   def _increment_accumulated_steps(self):
@@ -139,14 +140,16 @@ class PersonAgent(ap.Agent):
 
     return ready_to_move
 
-  def _get_not_previously_seen_positions(self, current_position, grid):
+  def _get_next_positions(self, current_position, grid):
     possible_next_positions = search.get_absolute_possible_movements(current_position)
     empty_positions = grid.empty
 
     posible_next_positions_empty = search.get_empty_possible_positions(possible_next_positions, empty_positions)
-    not_previously_seen_empty_positions = utils.find_exclusive_tuples(posible_next_positions_empty, self.memory.get())
+    next_positions = utils.find_exclusive_tuples(posible_next_positions_empty, self.memory.get())
+    if not next_positions:
+      next_positions = posible_next_positions_empty
 
-    return not_previously_seen_empty_positions
+    return next_positions
 
 
   def _random_movement(self, not_previously_seen_empty_positions):
@@ -193,36 +196,36 @@ class PersonAgent(ap.Agent):
           ### Se for criança, idoso, ou pessoa com mobilidade limitada, informa o follow me
           elif agent.agent_class in [consts.CHILD_KEY, consts.ELDER_KEY, consts.LIM_MOB_KEY]:
             self._inform_follow_me(agent)
-
+            self._inform_nearest_exit(agent, grid)
     # Move based on agent's physical capacity
     self._increment_accumulated_steps()
     self._increment_elapsed_time()
 
     if self._agent_ready_to_move():
 
-      not_previously_seen_empty_positions = self._get_not_previously_seen_positions(current_position, grid)
-      if not not_previously_seen_empty_positions:
-        return
+      next_positions = self._get_next_positions(current_position, grid)
 
       if self.agent_class == consts.EMPLOYEE_KEY:
-        if (self.number_of_followers >= 5 or self.elapsed_time >= 15):
+        if (self.number_of_followers >= 5 or self.elapsed_time >= 30):
           current_destination = self._find_optimal_path(current_position, grid)
         else:
-          current_destination = self._random_movement(not_previously_seen_empty_positions)
+          current_destination = self._random_movement(next_positions)
 
       elif self.agent_class == consts.ADULT_KEY:
         if self.known_exit_position:
           current_destination = self._find_optimal_path(current_position, grid)
         else:
-          current_destination = self._random_movement(not_previously_seen_empty_positions)
+          current_destination = self._random_movement(next_positions)
 
       elif self.agent_class in [consts.CHILD_KEY, consts.ELDER_KEY, consts.LIM_MOB_KEY]:
+        current_destination = None
         if self.leader_agent:
-          current_destination = grid.positions[self.leader_agent]
-        elif self.known_exit_position:
+          current_destination = self.leader_agent._get_agent_current_position(grid)
+
+        if current_destination is None and self.known_exit_position:
           current_destination = self._find_optimal_path(current_position, grid)
         else:
-          current_destination = self._random_movement(not_previously_seen_empty_positions)
+          current_destination = self._random_movement(next_positions)
 
       grid.move_to(self, current_destination)
       self.memory.append(current_destination)
