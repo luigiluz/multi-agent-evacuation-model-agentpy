@@ -125,15 +125,15 @@ def main():
     print("Building evacuation simulation")
     parameters = {
     'n_agents': 20,
-    'adults_percentage': 0.5,
-    'employee_percentage': 0.1,
+    'adults_percentage': 0.4,
+    'employee_percentage': 0.2,
     'child_percentage': 0.2,
     'elder_percentage': 0.1,
     'limited_mobility_percentage': 0.1,
     'random_obstacles_percentage': 0.05, # Based on the amount of free grids
     'floorplan_filepath': 'environments/floorplan_four_exits.txt',
     'strategy': 'every_man_for_himself',
-    'steps': 2,
+    'steps': 100,
     }
 
     timestamp_string = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
