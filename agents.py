@@ -73,7 +73,10 @@ class PersonAgent(ap.Agent):
     self.environment_knowledge = consts.AGENTS_CLASS_CHARACTERISTICS_MAPPING[self.agent_class][consts.ENV_KNOW_KEY]
     self.path_finding = search.HeuristicSearch(max_iter=self.environment_knowledge)
 
-    self.panic_level = random.uniform(0, 0.3)
+    if self.agent_class == consts.EMPLOYEE_KEY:
+      self.panic_level = 0
+    else:
+      self.panic_level = random.uniform(0, 0.3)
 
     self.physical_capacity = consts.AGENTS_CLASS_CHARACTERISTICS_MAPPING[self.agent_class][consts.PHYS_CAP_KEY]
     self.accumulated_steps = 0
@@ -213,6 +216,7 @@ class PersonAgent(ap.Agent):
     self._increment_elapsed_time()
 
     if self._agent_ready_to_move():
+      panic_level_rng = random.random()
 
       next_positions = self._get_next_positions(current_position, grid)
 
@@ -226,7 +230,7 @@ class PersonAgent(ap.Agent):
           current_destination = self._find_optimal_path(current_position, grid)
 
       elif self.agent_class == consts.ADULT_KEY:
-        if self.known_exit_position:
+        if self.known_exit_position and (panic_level_rng >= self.panic_level):
           current_destination = self._find_optimal_path(current_position, grid)
         else:
           current_destination = self._random_movement(next_positions)
@@ -238,7 +242,7 @@ class PersonAgent(ap.Agent):
           if self.leader_agent:
             current_destination = self.leader_agent._get_agent_current_position(grid)
 
-        if current_destination is None and self.known_exit_position:
+        if current_destination is None and self.known_exit_position and (panic_level_rng >= self.panic_level):
           current_destination = self._find_optimal_path(current_position, grid)
         else:
           current_destination = self._random_movement(next_positions)
