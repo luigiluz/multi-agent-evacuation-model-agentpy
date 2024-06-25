@@ -3,7 +3,7 @@ from matplotlib.ticker import MaxNLocator
 
 import constants as consts
 
-figure_name = "safe_people.png"
+figure_name = "safe_people"
 
 STRATEGY_TRANSLATION_MAPPING = {
     consts.EVERY_MAN_FOR_HIMSELF_KEY: "Cada um por si",
@@ -38,5 +38,5 @@ def generate_saved_agents_plot(df, folder_path, parameters, aggregate=False):
     plt.legend()
 
     # Show the plot
-    plt.savefig(f"{folder_path}/{figure_name}")
+    plt.savefig(f"{folder_path}/{figure_name}_{parameters['strategy']}_{parameters['n_of_emergency_exits']}.png")
 
