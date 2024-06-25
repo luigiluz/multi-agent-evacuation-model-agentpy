@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 import constants as consts
 
@@ -11,7 +12,7 @@ STRATEGY_TRANSLATION_MAPPING = {
 }
 
 def generate_saved_agents_plot(df, folder_path, parameters):
-    plt.figure(figsize=(15, 5))
+    fig, ax = plt.subplots(figsize=(10, 7))
     positions = df["step"]
     bar_width = 0.5
 
@@ -26,6 +27,8 @@ def generate_saved_agents_plot(df, folder_path, parameters):
 
     plt.xlabel('Passos de simulação')
     plt.ylabel('Pessoas salvas')
+    # Set the y-axis to use only integer ticks
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     plt.title(f"Simulação de evacuação de prédio \n Estratégia: {STRATEGY_TRANSLATION_MAPPING[parameters['strategy']]} \n Ambiente: {parameters['n_of_emergency_exits']} saídas, {parameters['n_of_emergency_exit_signs']} placas, {parameters['random_obstacles_percentage']} % obstáculos")
     plt.legend()
 
