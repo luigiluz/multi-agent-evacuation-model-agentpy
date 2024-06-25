@@ -168,7 +168,7 @@ class PersonAgent(ap.Agent):
     return destination
 
 
-  def evacuate(self, grid):
+  def evacuate(self, grid, strategy):
     # Check if the agent is still in the environment
     current_position = self._get_agent_current_position(grid)
     if current_position is None:
@@ -185,21 +185,29 @@ class PersonAgent(ap.Agent):
     ## Look for distant agents to warn them
     distant_neighbors = grid.neighbors(self, 3)
     for agent in distant_neighbors:
+
+      # The agents are able to notice the emergency exit independent of the strategy
       if isinstance(agent, EmergencyExitSignAgent):
         self.known_exit_position = agent.nearest_emergency_exit
-      elif isinstance(agent, PersonAgent):
-        ### Responsabilidades da classe ADULT
-        if self.agent_class == consts.ADULT_KEY:
-          self._inform_known_position(agent)
-        ### Responsabilidades da classe EMPLOYEE
-        elif self.agent_class == consts.EMPLOYEE_KEY:
-          ### Informa pro adulto a saída mais próxima
-          if agent.agent_class == consts.ADULT_KEY:
-            self._inform_nearest_exit(agent, grid)
-          ### Se for criança, idoso, ou pessoa com mobilidade limitada, informa o follow me
-          elif agent.agent_class in [consts.CHILD_KEY, consts.ELDER_KEY, consts.LIM_MOB_KEY]:
-            self._inform_follow_me(agent)
-            self._inform_nearest_exit(agent, grid)
+
+      if isinstance(agent, PersonAgent):
+        if strategy == consts.EVERY_MAN_FOR_HIMSELF_KEY:
+          # Do nothing
+          pass
+        elif strategy == consts.COMMUNICATION_KEY:
+          # Adults and employees are able to communicate the exit
+          if self.agent_class in [consts.ADULT_KEY, consts.EMPLOYEE_KEY]:
+            self._inform_known_position(agent)
+        elif strategy == consts.EVACUATION_PLAN_KEY:
+          if self.agent_class == consts.ADULT_KEY:
+            self._inform_known_position(agent)
+          elif self.agent_class == consts.EMPLOYEE_KEY:
+            if agent.agent_class == consts.ADULT_KEY:
+              self._inform_nearest_exit(agent, grid)
+            elif agent.agent_class in [consts.CHILD_KEY, consts.ELDER_KEY, consts.LIM_MOB_KEY]:
+              self._inform_follow_me(agent)
+              self._inform_nearest_exit(agent, grid)
+
     # Move based on agent's physical capacity
     self._increment_accumulated_steps()
     self._increment_elapsed_time()
@@ -209,10 +217,13 @@ class PersonAgent(ap.Agent):
       next_positions = self._get_next_positions(current_position, grid)
 
       if self.agent_class == consts.EMPLOYEE_KEY:
-        if (self.number_of_followers >= 5 or self.elapsed_time >= 30):
+        if strategy == consts.EVACUATION_PLAN_KEY:
+          if (self.number_of_followers >= 5 or self.elapsed_time >= 30):
+            current_destination = self._find_optimal_path(current_position, grid)
+          else:
+            current_destination = self._random_movement(next_positions)
+        elif strategy in [consts.EVERY_MAN_FOR_HIMSELF_KEY, consts.COMMUNICATION_KEY]:
           current_destination = self._find_optimal_path(current_position, grid)
-        else:
-          current_destination = self._random_movement(next_positions)
 
       elif self.agent_class == consts.ADULT_KEY:
         if self.known_exit_position:
@@ -222,8 +233,10 @@ class PersonAgent(ap.Agent):
 
       elif self.agent_class in [consts.CHILD_KEY, consts.ELDER_KEY, consts.LIM_MOB_KEY]:
         current_destination = None
-        if self.leader_agent:
-          current_destination = self.leader_agent._get_agent_current_position(grid)
+        # Leaders only exist in evacuation plan strategy
+        if strategy == consts.EVACUATION_PLAN_KEY:
+          if self.leader_agent:
+            current_destination = self.leader_agent._get_agent_current_position(grid)
 
         if current_destination is None and self.known_exit_position:
           current_destination = self._find_optimal_path(current_position, grid)

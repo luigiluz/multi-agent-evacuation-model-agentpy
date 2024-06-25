@@ -123,7 +123,6 @@ def main():
     args = parser.parse_args()
 
     print("Building evacuation simulation")
-    # TODO: Adicionar estratégia como parâmetro de entrada
     parameters = {
     'n_agents': 20,
     'adults_percentage': 0.5,
@@ -132,8 +131,9 @@ def main():
     'elder_percentage': 0.1,
     'limited_mobility_percentage': 0.1,
     'random_obstacles_percentage': 0.05, # Based on the amount of free grids
-    'steps': 50,
-    'floorplan_filepath': 'environments/floorplan_fixed_signs_rearranged.txt'
+    'floorplan_filepath': 'environments/floorplan_four_exits.txt',
+    'strategy': 'every_man_for_himself',
+    'steps': 2,
     }
 
     timestamp_string = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
@@ -156,12 +156,17 @@ def main():
         df = pd.DataFrame(json_data)
         df.to_csv(csv_filename)
 
-        images.generate_saved_agents_plot(df, folder_name, {"lala": "lele"})
+        images.generate_saved_agents_plot(df, folder_name, parameters)
 
         print(f"Results = {results}")
     else:
         fig, ax = plt.subplots(figsize=(15, 10))
         animation = ap.animate(model, fig, ax, animation_plot)
+
+        n_of_emergency_exits = len(model.emergency_exit)
+        n_of_emergency_exit_signs = len(model.emergency_exit_sign)
+        parameters['n_of_emergency_exits'] = n_of_emergency_exits
+        parameters['n_of_emergency_exit_signs'] = n_of_emergency_exit_signs
 
         # Assume `animation` is your animation object
         html_content = IPython.display.HTML(animation.to_jshtml(fps=5)).data
@@ -173,7 +178,7 @@ def main():
         df = pd.DataFrame(json_data)
         df.to_csv(csv_filename)
 
-        images.generate_saved_agents_plot(df, folder_name, {"lala": "lele"})
+        images.generate_saved_agents_plot(df, folder_name, parameters)
 
     print(f"The simulation artifacts are saved in {folder_name} folder")
 

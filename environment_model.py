@@ -48,6 +48,10 @@ class BuildingEvacuationModel(ap.Model):
   def setup(self):
     # Called at the start of the simulation
 
+    self.strategy = self.p.strategy
+    if self.strategy not in consts.AVAILABLE_COORDINATION_STRATEGIES:
+      raise KeyError(f"Selected strategy {self.strategy} is NOT in available strategies.")
+
     # Used to record data
     self._simulation_data = []
 
@@ -127,7 +131,7 @@ class BuildingEvacuationModel(ap.Model):
 
   def step(self):
     # Called at every simulation step
-    self.person_agents.evacuate(self.building)
+    self.person_agents.evacuate(self.building, self.strategy)
     self.emergency_exit.allow_people(self.building)
 
     step_record_dict = {
