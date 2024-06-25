@@ -11,8 +11,13 @@ STRATEGY_TRANSLATION_MAPPING = {
     consts.EVACUATION_PLAN_KEY: "Placo de evacuação"
 }
 
-def generate_saved_agents_plot(df, folder_path, parameters):
+def generate_saved_agents_plot(df, folder_path, parameters, aggregate=False):
     fig, ax = plt.subplots(figsize=(10, 7))
+    y_label = "Pessoas salvas"
+    if aggregate:
+        y_label = "Média de pessoas salvas"
+        df = df[['step', 'adult', 'employee', 'child', 'elder', 'limited_mobility']].groupby('step').mean().round().reset_index()
+
     positions = df["step"]
     bar_width = 0.5
 
@@ -26,7 +31,7 @@ def generate_saved_agents_plot(df, folder_path, parameters):
     plt.axhline(y=parameters['n_agents'], color='black', linestyle='--', linewidth=2, label="Numero de agentes")
 
     plt.xlabel('Passos de simulação')
-    plt.ylabel('Pessoas salvas')
+    plt.ylabel(y_label)
     # Set the y-axis to use only integer ticks
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     plt.title(f"Simulação de evacuação de prédio \n Estratégia: {STRATEGY_TRANSLATION_MAPPING[parameters['strategy']]} \n Ambiente: {parameters['n_of_emergency_exits']} saídas, {parameters['n_of_emergency_exit_signs']} placas, {parameters['random_obstacles_percentage']} % obstáculos")

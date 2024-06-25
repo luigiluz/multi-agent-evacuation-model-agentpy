@@ -131,16 +131,18 @@ def main():
     'elder_percentage': 0.1,
     'limited_mobility_percentage': 0.1,
     'random_obstacles_percentage': 0.05, # Based on the amount of free grids
-    'floorplan_filepath': 'environments/floorplan_four_exits.txt',
+    'floorplan_filepath': 'environments/floorplan_two_exits.txt',
     'strategy': 'every_man_for_himself',
     'steps': 100,
     }
+
+    NUMBER_OF_EXPERIMENTS_RUN = 50
 
     timestamp_string = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     folder_name = f"{consts.ARTIFACTS_FOLDER}/{timestamp_string}_run"
     parameter_json_filename = f"{folder_name}/parameters.json"
     html_filename = f"{folder_name}/simulation_animation.html"
-    csv_filename = f"{folder_name}/simulation_data.csv"
+    csv_filename = f"{folder_name}/simulation_data_{parameters['strategy']}.csv"
 
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
@@ -148,18 +150,32 @@ def main():
     with open(parameter_json_filename, 'w') as json_file:
         json.dump(parameters, json_file, indent=4)
 
-    model = env_model.BuildingEvacuationModel(parameters)
-
     if args.wo_animation:
-        results = model.run(seed=42, display=True)
-        json_data = results[consts.CUSTOM_RECORD_KEY]
-        df = pd.DataFrame(json_data)
+        results_list = []
+        for i in range(NUMBER_OF_EXPERIMENTS_RUN):
+            model = env_model.BuildingEvacuationModel(parameters)
+            results = model.run()
+            json_data = results[consts.CUSTOM_RECORD_KEY]
+            for item in json_data:
+                item["run"] = i
+            results_list.extend(json_data)
+
+        n_of_emergency_exits = int(len(model.emergency_exit) / 2)
+        n_of_emergency_exit_signs = len(model.emergency_exit_sign)
+        parameters['n_of_emergency_exits'] = n_of_emergency_exits
+        parameters['n_of_emergency_exit_signs'] = n_of_emergency_exit_signs
+
+        df = pd.DataFrame(results_list)
+        # for key, value in parameters.items():
+        #     df[key] = value
+
         df.to_csv(csv_filename)
 
-        images.generate_saved_agents_plot(df, folder_name, parameters)
+        images.generate_saved_agents_plot(df, folder_name, parameters, aggregate=True)
 
         print(f"Results = {results}")
     else:
+        model = env_model.BuildingEvacuationModel(parameters)
         fig, ax = plt.subplots(figsize=(15, 10))
         animation = ap.animate(model, fig, ax, animation_plot)
 
