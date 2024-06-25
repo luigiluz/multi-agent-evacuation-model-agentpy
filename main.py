@@ -163,7 +163,7 @@ def main():
         fig, ax = plt.subplots(figsize=(15, 10))
         animation = ap.animate(model, fig, ax, animation_plot)
 
-        n_of_emergency_exits = len(model.emergency_exit)
+        n_of_emergency_exits = int(len(model.emergency_exit) / 2)
         n_of_emergency_exit_signs = len(model.emergency_exit_sign)
         parameters['n_of_emergency_exits'] = n_of_emergency_exits
         parameters['n_of_emergency_exit_signs'] = n_of_emergency_exit_signs
