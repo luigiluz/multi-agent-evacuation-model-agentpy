@@ -222,7 +222,7 @@ class PersonAgent(ap.Agent):
 
       if self.agent_class == consts.EMPLOYEE_KEY:
         if strategy == consts.EVACUATION_PLAN_KEY:
-          if (self.number_of_followers >= 5 or self.elapsed_time >= 30):
+          if (self.number_of_followers >= 5 or self.elapsed_time >= 15):
             current_destination = self._find_optimal_path(current_position, grid)
           else:
             current_destination = self._random_movement(next_positions)
