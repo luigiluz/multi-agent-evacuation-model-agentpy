@@ -1,9 +1,14 @@
 import matplotlib.pyplot as plt
-import pandas as pd
 
 import constants as consts
 
 figure_name = "safe_people.png"
+
+STRATEGY_TRANSLATION_MAPPING = {
+    consts.EVERY_MAN_FOR_HIMSELF_KEY: "Cada um por si",
+    consts.COMMUNICATION_KEY: "Comunicação",
+    consts.EVACUATION_PLAN_KEY: "Placo de evacuação"
+}
 
 def generate_saved_agents_plot(df, folder_path, parameters):
     plt.figure(figsize=(15, 5))
@@ -11,25 +16,17 @@ def generate_saved_agents_plot(df, folder_path, parameters):
     bar_width = 0.5
 
     # Create the bars
-    plt.bar(positions, df[consts.ADULT_KEY], bar_width, label=consts.ADULT_KEY)
-    plt.bar(positions, df[consts.CHILD_KEY], bar_width, bottom=df[consts.ADULT_KEY], label=consts.CHILD_KEY)
-    plt.bar(positions, df[consts.LIM_MOB_KEY], bar_width, bottom=df[consts.ADULT_KEY] + df[consts.CHILD_KEY], label=consts.LIM_MOB_KEY)
-    plt.bar(positions, df[consts.ELDER_KEY], bar_width, bottom=df[consts.ADULT_KEY] + df[consts.CHILD_KEY] + df[consts.LIM_MOB_KEY], label=consts.ELDER_KEY)
-    plt.bar(positions, df[consts.EMPLOYEE_KEY], bar_width, bottom=df[consts.ADULT_KEY] + df[consts.CHILD_KEY] + df[consts.LIM_MOB_KEY] + df[consts.ELDER_KEY], label=consts.EMPLOYEE_KEY)
+    plt.bar(positions, df[consts.ADULT_KEY], bar_width, label=f"Adulto ({parameters['adults_percentage']})")
+    plt.bar(positions, df[consts.CHILD_KEY], bar_width, bottom=df[consts.ADULT_KEY], label=f"Criança ({parameters['child_percentage']})")
+    plt.bar(positions, df[consts.LIM_MOB_KEY], bar_width, bottom=df[consts.ADULT_KEY] + df[consts.CHILD_KEY], label=f"Dificuldade locomoção ({parameters['limited_mobility_percentage']})")
+    plt.bar(positions, df[consts.ELDER_KEY], bar_width, bottom=df[consts.ADULT_KEY] + df[consts.CHILD_KEY] + df[consts.LIM_MOB_KEY], label=f"Idoso ({parameters['elder_percentage']})")
+    plt.bar(positions, df[consts.EMPLOYEE_KEY], bar_width, bottom=df[consts.ADULT_KEY] + df[consts.CHILD_KEY] + df[consts.LIM_MOB_KEY] + df[consts.ELDER_KEY], label=f"Funcionário ({parameters['employee_percentage']})")
 
-    # Add labels, title, and legend
-    # TODO: Get parameters to plot the title
-    # Alguns que preciso pegar:
-    # Quantidade total de agentes
-    # Porcentagem de agentes
-    # Quantidade de saidas de emergência
-    # Quantidade de avisos
-    # Porcentagem de obstáculos
-    # Estratégia
+    plt.axhline(y=parameters['n_agents'], color='black', linestyle='--', linewidth=2, label="Numero de agentes")
 
-    plt.xlabel('Steps')
-    plt.ylabel('Safe people')
-    plt.title('Simulation for building evacuation \n Strategy: Employees with Follow Me \n Environment: 4 exits, 4 signs')
+    plt.xlabel('Passos de simulação')
+    plt.ylabel('Pessoas salvas')
+    plt.title(f"Simulação de evacuação de prédio \n Estratégia: {STRATEGY_TRANSLATION_MAPPING[parameters['strategy']]} \n Ambiente: {parameters['n_of_emergency_exits']} saídas, {parameters['n_of_emergency_exit_signs']} placas, {parameters['random_obstacles_percentage']} % obstáculos")
     plt.legend()
 
     # Show the plot
