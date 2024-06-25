@@ -1,0 +1,12 @@
+{
+    "n_agents": 20,
+    "adults_percentage": 0.4,
+    "employee_percentage": 0.2,
+    "child_percentage": 0.2,
+    "elder_percentage": 0.1,
+    "limited_mobility_percentage": 0.1,
+    "random_obstacles_percentage": 0.05,
+    "floorplan_filepath": "environments/floorplan_two_exits.txt",
+    "strategy": "evacuation_plan",
+    "steps": 100
+}
